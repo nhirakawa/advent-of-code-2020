@@ -32,7 +32,7 @@ fn part_two(program: &str) -> PartAnswer {
 
 struct ArcadeCabinet {
     computer: Computer,
-    last_score: i64,
+    last_score: i128,
     last_ball_position: Option<(i32, i32)>,
     last_paddle_position: Option<(i32, i32)>,
 }
@@ -57,15 +57,19 @@ impl ArcadeCabinet {
         self.computer.step_until_halt();
     }
 
-    fn count_number_of_blocks(&self) -> usize {
+    fn count_number_of_blocks(&mut self) -> usize {
         let mut num_blocks = 0;
 
         for chunk in self.computer.get_outputs().chunks(3) {
             let x = chunk[0];
             let y = chunk[1];
-            let tile_type: TileType = chunk[2].into();
+            let tile_id = chunk[2];
 
-            if tile_type == TileType::Block {
+            if (x, y) == (-1, 0) {
+                self.last_score = tile_id;
+            }
+
+            if TileType::Block == tile_id.into() {
                 num_blocks += 1;
             }
         }
