@@ -32,6 +32,7 @@ fn part_two(program: &str) -> PartAnswer {
 
 struct ArcadeCabinet {
     computer: Computer,
+    last_score: i64,
     last_ball_position: Option<(i32, i32)>,
     last_paddle_position: Option<(i32, i32)>,
 }
@@ -42,6 +43,7 @@ impl ArcadeCabinet {
 
         ArcadeCabinet {
             computer,
+            last_score: 0,
             last_ball_position: None,
             last_paddle_position: None,
         }
