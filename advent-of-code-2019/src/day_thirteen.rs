@@ -1,4 +1,5 @@
 use core::num;
+use std::sync::Arc;
 
 use common::prelude::*;
 
@@ -12,23 +13,55 @@ pub fn run() -> AdventOfCodeResult {
 
 fn part_one(program: &str) -> PartAnswer {
     let start = SystemTime::now();
-    let mut computer = Computer::from_program(program);
+    let mut arcade_cabinet = ArcadeCabinet::new(program);
 
-    computer.step_until_halt();
+    arcade_cabinet.play();
 
-    let mut num_blocks = 0;
+    let mut num_blocks = arcade_cabinet.count_number_of_blocks();
 
-    for chunk in computer.get_outputs().chunks(3) {
-        let x = chunk[0];
-        let y = chunk[1];
-        let tile_type: TileType = chunk[2].into();
+    PartAnswer::new(num_blocks, start.elapsed().unwrap())
+}
 
-        if tile_type == TileType::Block {
-            num_blocks += 1;
+struct ArcadeCabinet {
+    computer: Computer,
+    last_ball_position: Option<(i32, i32)>,
+    last_paddle_position: Option<(i32, i32)>,
+}
+
+impl ArcadeCabinet {
+    fn new(program: &str) -> ArcadeCabinet {
+        let computer = Computer::from_program(program);
+
+        ArcadeCabinet {
+            computer,
+            last_ball_position: None,
+            last_paddle_position: None,
         }
     }
 
-    PartAnswer::new(num_blocks, start.elapsed().unwrap())
+    fn insert_quarters(&mut self) {
+        self.computer.set(0, 2);
+    }
+
+    fn play(&mut self) {
+        self.computer.step_until_halt();
+    }
+
+    fn count_number_of_blocks(&self) -> usize {
+        let mut num_blocks = 0;
+
+        for chunk in self.computer.get_outputs().chunks(3) {
+            let x = chunk[0];
+            let y = chunk[1];
+            let tile_type: TileType = chunk[2].into();
+
+            if tile_type == TileType::Block {
+                num_blocks += 1;
+            }
+        }
+
+        num_blocks
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
