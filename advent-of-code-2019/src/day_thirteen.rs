@@ -5,7 +5,8 @@ use crate::computer::Computer;
 pub fn run() -> AdventOfCodeResult {
     let input = include_str!("../input/day-13.txt");
     let part_one = part_one(input);
-    Ok((part_one, PartAnswer::default()))
+    let part_two = part_two(input);
+    Ok((part_one, part_two))
 }
 
 fn part_one(program: &str) -> PartAnswer {
@@ -27,14 +28,14 @@ fn part_two(program: &str) -> PartAnswer {
     arcade_cabinet.insert_quarters();
     arcade_cabinet.play();
 
-    PartAnswer::new(0, start.elapsed().unwrap())
+    PartAnswer::new(arcade_cabinet.last_score, start.elapsed().unwrap())
 }
 
 struct ArcadeCabinet {
     computer: Computer,
     last_score: i128,
-    last_ball_position: Option<(i32, i32)>,
-    last_paddle_position: Option<(i32, i32)>,
+    last_ball_position: (i128, i128),
+    last_paddle_position: (i128, i128),
 }
 
 impl ArcadeCabinet {
@@ -44,8 +45,8 @@ impl ArcadeCabinet {
         ArcadeCabinet {
             computer,
             last_score: 0,
-            last_ball_position: None,
-            last_paddle_position: None,
+            last_ball_position: (0, 0),
+            last_paddle_position: (0, 0),
         }
     }
 
@@ -54,20 +55,51 @@ impl ArcadeCabinet {
     }
 
     fn play(&mut self) {
-        self.computer.step_until_halt();
+        while !self.computer.is_halted() {
+            self.computer.step();
+
+            if self.computer.get_number_of_outputs() >= 3 {
+                let x = self.computer.get_output().unwrap();
+                let y = self.computer.get_output().unwrap();
+                let tile_id = self.computer.get_output().unwrap();
+
+                if (x, y) == (-1, 0) {
+                    self.last_score = tile_id;
+                }
+
+                let tile_type = tile_id.into();
+
+                match tile_type {
+                    TileType::Ball => {
+                        self.last_ball_position = (x, y);
+                    }
+                    TileType::HorizontalPaddle => {
+                        self.last_paddle_position = (x, y);
+                    }
+                    _ => {}
+                };
+
+                println!(
+                    "[{}] ball:{:?}, paddle:{:?}",
+                    self.last_score, self.last_ball_position, self.last_paddle_position
+                );
+            }
+
+            if self.computer.is_blocked_on_input() {
+                let last_ball_position = self.last_ball_position;
+                let last_paddle_position = self.last_paddle_position;
+
+                let input = get_arcade_input(&last_ball_position, &last_paddle_position);
+                self.computer.push_input(input);
+            }
+        }
     }
 
     fn count_number_of_blocks(&mut self) -> usize {
         let mut num_blocks = 0;
 
         for chunk in self.computer.get_outputs().chunks(3) {
-            let x = chunk[0];
-            let y = chunk[1];
             let tile_id = chunk[2];
-
-            if (x, y) == (-1, 0) {
-                self.last_score = tile_id;
-            }
 
             if TileType::Block == tile_id.into() {
                 num_blocks += 1;
@@ -76,6 +108,10 @@ impl ArcadeCabinet {
 
         num_blocks
     }
+}
+
+fn get_arcade_input(ball_position: &(i128, i128), paddle_position: &(i128, i128)) -> i128 {
+    (ball_position.0 - paddle_position.0).signum()
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -95,7 +131,31 @@ impl From<i128> for TileType {
             2 => TileType::Block,
             3 => TileType::HorizontalPaddle,
             4 => TileType::Ball,
-            _ => panic!(format!("cannot convert {} to TileType", i)),
+            _ => panic!("cannot convert {} to TileType", i),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_arcade_input() {
+        let ball_position = (4, 4);
+        let paddle_position = (0, 10);
+
+        let input = get_arcade_input(&ball_position, &paddle_position);
+        assert_eq!(input, 1);
+
+        let paddle_position = (10, 10);
+
+        let input = get_arcade_input(&ball_position, &paddle_position);
+        assert_eq!(input, -1);
+
+        let paddle_position = (4, 10);
+
+        let input = get_arcade_input(&ball_position, &paddle_position);
+        assert_eq!(input, 0);
     }
 }

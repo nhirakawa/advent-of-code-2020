@@ -191,6 +191,10 @@ impl Computer {
         self.outputs.get(self.output_index).is_some()
     }
 
+    pub fn get_number_of_outputs(&self) -> usize {
+        self.outputs.len() - self.output_index
+    }
+
     pub fn get_output(&mut self) -> Option<Data> {
         if let Some(output) = self.outputs.get(self.output_index) {
             self.output_index += 1;
