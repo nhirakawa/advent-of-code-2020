@@ -1,6 +1,3 @@
-use core::num;
-use std::sync::Arc;
-
 use common::prelude::*;
 
 use crate::computer::Computer;
@@ -17,9 +14,20 @@ fn part_one(program: &str) -> PartAnswer {
 
     arcade_cabinet.play();
 
-    let mut num_blocks = arcade_cabinet.count_number_of_blocks();
+    let num_blocks = arcade_cabinet.count_number_of_blocks();
 
     PartAnswer::new(num_blocks, start.elapsed().unwrap())
+}
+
+fn part_two(program: &str) -> PartAnswer {
+    let start = SystemTime::now();
+
+    let mut arcade_cabinet = ArcadeCabinet::new(program);
+
+    arcade_cabinet.insert_quarters();
+    arcade_cabinet.play();
+
+    PartAnswer::new(0, start.elapsed().unwrap())
 }
 
 struct ArcadeCabinet {
