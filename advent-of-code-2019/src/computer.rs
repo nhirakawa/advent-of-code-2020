@@ -810,11 +810,14 @@ mod tests {
         assert_eq!(computer.output_index, 0);
         assert_eq!(computer.get_output(), None);
         assert_eq!(computer.output_index, 0);
+        assert_eq!(computer.get_number_of_outputs(), 0);
 
         computer.step();
 
+        assert_eq!(computer.get_number_of_outputs(), 1);
         assert_eq!(computer.get_output(), Some(1));
         assert_eq!(computer.output_index, 1);
+        assert_eq!(computer.get_number_of_outputs(), 0);
 
         assert_eq!(computer.get_output(), None);
     }
